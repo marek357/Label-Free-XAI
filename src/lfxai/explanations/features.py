@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.nn.functional as F
 from captum.attr import Attribution, Saliency
 from torch.nn import Module
 
@@ -9,7 +10,8 @@ class AuxiliaryFunction(Module):
         super().__init__()
         self.black_box = black_box
         self.base_features = base_features
-        self.prediction = black_box(base_features)
+        prediction = black_box(base_features)
+        self.prediction = F.softmax(torch.where(prediction > 0, prediction, torch.ones_like(prediction) * float('-inf')))
 
     def forward(self, input_features: torch.Tensor) -> torch.Tensor:
         if len(self.prediction) == len(input_features):
